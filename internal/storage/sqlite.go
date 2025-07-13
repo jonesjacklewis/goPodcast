@@ -1,74 +1,13 @@
-package main
+package storage
 
 import (
 	"database/sql"
-	"encoding/xml"
 	"fmt"
-	"net/http"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/jonesjacklewis/goPodcast/internal/fetching"
 )
 
-var DATABASE_NAME = "data.db"
-
-type Enclosure struct {
-	Url string `xml:"url,attr"`
-}
-
-type Item struct {
-	Title     string    `xml:"title"`
-	Link      string    `xml:"link"`
-	Enclosure Enclosure `xml:"enclosure"`
-}
-
-type Image struct {
-	Url string `xml:"url"`
-}
-
-type Channel struct {
-	Title       string `xml:"title"`
-	Description string `xml:"description"`
-	Image       Image  `xml:"image"`
-	Items       []Item `xml:"item"`
-}
-
-type RSS struct {
-	Channel Channel `xml:"channel"`
-}
-
-type Podcast struct {
-	FeedData RSS
-	Url      string
-}
-
-func fetchPodcast(url string) (Podcast, error) {
-	response, err := http.Get(url)
-
-	if err != nil {
-		return Podcast{}, fmt.Errorf("error when making request: %s", err.Error())
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		return Podcast{}, fmt.Errorf("unsuccessful response from feed: %d", response.StatusCode)
-	}
-
-	var rss RSS
-
-	decoder := xml.NewDecoder(response.Body)
-
-	if err := decoder.Decode(&rss); err != nil {
-		return Podcast{}, fmt.Errorf("invalid XML: %s", err.Error())
-	}
-
-	return Podcast{
-		FeedData: rss,
-		Url:      url,
-	}, nil
-}
-
-func createDatabase(db *sql.DB) error {
+func CreateDatabase(db *sql.DB) error {
 	podcastsTable := `
 	CREATE TABLE IF NOT EXISTS podcasts (
 	    Id INTEGER PRIMARY KEY,
@@ -105,8 +44,8 @@ func createDatabase(db *sql.DB) error {
 	return nil
 }
 
-func addEpisode(podcastEpisode Item, podcastId int, db *sql.DB) error {
-	addPodcastEpisodeQuery := `
+func AddEpisode(podcastEpisode fetching.Item, podcastId int, db *sql.DB) error {
+	AddPodcastEpisodeQuery := `
 	INSERT OR IGNORE
 	INTO episodes
 	(PodcastId, EpisodeTitle, EpisodeLink, EnclosureUrl)
@@ -114,7 +53,7 @@ func addEpisode(podcastEpisode Item, podcastId int, db *sql.DB) error {
 	(?, ?, ?, ?)
 	`
 
-	preparedStatementAddEpsiode, err := db.Prepare(addPodcastEpisodeQuery)
+	preparedStatementAddEpsiode, err := db.Prepare(AddPodcastEpisodeQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating prepared statement for inserting podcast episode")
@@ -131,8 +70,8 @@ func addEpisode(podcastEpisode Item, podcastId int, db *sql.DB) error {
 	return nil
 }
 
-func addPodcast(podcast Podcast, db *sql.DB) (int, error) {
-	addPodcastQueryString := `
+func AddPodcast(podcast fetching.Podcast, db *sql.DB) (int, error) {
+	AddPodcastQueryString := `
 	INSERT OR IGNORE
 	INTO podcasts
 	(Title, Url, Description, Image)
@@ -140,7 +79,7 @@ func addPodcast(podcast Podcast, db *sql.DB) (int, error) {
 	(?, ?, ?, ?)
 	`
 
-	preparedStatementAddPodcast, err := db.Prepare(addPodcastQueryString)
+	preparedStatementAddPodcast, err := db.Prepare(AddPodcastQueryString)
 
 	if err != nil {
 		return -1, fmt.Errorf("error creating prepared statement for inserting podcast %s", err.Error())
@@ -195,15 +134,15 @@ func addPodcast(podcast Podcast, db *sql.DB) (int, error) {
 	return podcastId, nil
 }
 
-func addFullPodcast(podcast Podcast, db *sql.DB) error {
-	id, err := addPodcast(podcast, db)
+func AddFullPodcast(podcast fetching.Podcast, db *sql.DB) error {
+	id, err := AddPodcast(podcast, db)
 
 	if err != nil {
 		return err
 	}
 
 	for _, episode := range podcast.FeedData.Channel.Items {
-		err = addEpisode(episode, id, db)
+		err = AddEpisode(episode, id, db)
 
 		if err != nil {
 			return err
@@ -211,57 +150,4 @@ func addFullPodcast(podcast Podcast, db *sql.DB) error {
 	}
 
 	return nil
-}
-
-func main() {
-
-	db, err := sql.Open("sqlite3", DATABASE_NAME)
-
-	if err != nil {
-		fmt.Printf("error opening DB %s", err.Error())
-		return
-	}
-
-	defer db.Close()
-
-	createDatabase(db)
-	rssFeed := "https://feeds.megaphone.fm/lateralcast"
-
-	podcast, err := fetchPodcast(rssFeed)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Printf("Podcast URL: %s\n", podcast.Url)
-
-	rss := podcast.FeedData
-
-	fmt.Printf("Podcast Title: %s\n", rss.Channel.Title)
-	fmt.Printf("Podcast Description: %s\n", rss.Channel.Description)
-	fmt.Printf("Number of Episodes: %d\n", len(rss.Channel.Items))
-
-	size := len(rss.Channel.Items)
-
-	if size > 10 {
-		size = 10
-	}
-
-	for i := 0; i < size; i++ {
-		fmt.Println("===========")
-		item := rss.Channel.Items[i]
-
-		fmt.Printf("Episode Title: %s\n", item.Title)
-		fmt.Printf("Episode Link: %s\n", item.Link)
-		fmt.Printf("Enclosure URL: %s\n", item.Enclosure.Url)
-		fmt.Println("===========")
-	}
-
-	err = addFullPodcast(podcast, db)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 }

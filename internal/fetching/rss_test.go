@@ -1,4 +1,4 @@
-package main
+package fetching
 
 import (
 	"net/http"
@@ -178,7 +178,7 @@ Learn more about your ad choices. Visit megaphone.fm/adchoices</itunes:summary>
 func TestFetchPodcast(t *testing.T) {
 
 	t.Run("When Invalid URL provided, then should return an error", func(t *testing.T) {
-		_, err := fetchPodcast("http://this-is-an-invalid-url.invalidurl")
+		_, err := FetchPodcast("http://this-is-an-invalid-url.invalidurl")
 
 		if err == nil {
 			t.Error("Expected an error, but none received")
@@ -196,7 +196,7 @@ func TestFetchPodcast(t *testing.T) {
 
 		defer server.Close()
 
-		_, err := fetchPodcast(server.URL)
+		_, err := FetchPodcast(server.URL)
 
 		expectedErrorMessage := "unsuccessful response from feed: 404"
 
@@ -217,7 +217,7 @@ func TestFetchPodcast(t *testing.T) {
 
 		defer server.Close()
 
-		_, err := fetchPodcast(server.URL)
+		_, err := FetchPodcast(server.URL)
 
 		if err == nil {
 			t.Errorf("Expected to receive an error")
@@ -236,7 +236,7 @@ func TestFetchPodcast(t *testing.T) {
 
 		defer server.Close()
 
-		podcast, err := fetchPodcast(server.URL)
+		podcast, err := FetchPodcast(server.URL)
 
 		if err != nil {
 			t.Errorf("Expected no err got %s", err)

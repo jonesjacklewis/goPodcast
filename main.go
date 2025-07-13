@@ -35,7 +35,7 @@ func fetchRssFeed(url string) (RSS, error) {
 	response, err := http.Get(url)
 
 	if err != nil {
-		return RSS{}, err
+		return RSS{}, fmt.Errorf("error when making request: %s", err.Error())
 	}
 
 	defer response.Body.Close()
@@ -49,7 +49,7 @@ func fetchRssFeed(url string) (RSS, error) {
 	decoder := xml.NewDecoder(response.Body)
 
 	if err := decoder.Decode(&rss); err != nil {
-		return RSS{}, err
+		return RSS{}, fmt.Errorf("invalid XML: %s", err.Error())
 	}
 
 	return rss, nil

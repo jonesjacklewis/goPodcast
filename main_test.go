@@ -175,10 +175,10 @@ Learn more about your ad choices. Visit megaphone.fm/adchoices</itunes:summary>
 </rss>
 `
 
-func TestFetchRssFeed(t *testing.T) {
+func TestFetchPodcast(t *testing.T) {
 
 	t.Run("When Invalid URL provided, then should return an error", func(t *testing.T) {
-		_, err := fetchRssFeed("http://this-is-an-invalid-url.invalidurl")
+		_, err := fetchPodcast("http://this-is-an-invalid-url.invalidurl")
 
 		if err == nil {
 			t.Error("Expected an error, but none received")
@@ -196,7 +196,7 @@ func TestFetchRssFeed(t *testing.T) {
 
 		defer server.Close()
 
-		_, err := fetchRssFeed(server.URL)
+		_, err := fetchPodcast(server.URL)
 
 		expectedErrorMessage := "unsuccessful response from feed: 404"
 
@@ -217,7 +217,7 @@ func TestFetchRssFeed(t *testing.T) {
 
 		defer server.Close()
 
-		_, err := fetchRssFeed(server.URL)
+		_, err := fetchPodcast(server.URL)
 
 		if err == nil {
 			t.Errorf("Expected to receive an error")
@@ -236,14 +236,15 @@ func TestFetchRssFeed(t *testing.T) {
 
 		defer server.Close()
 
-		xml, err := fetchRssFeed(server.URL)
+		podcast, err := fetchPodcast(server.URL)
 
 		if err != nil {
 			t.Errorf("Expected no err got %s", err)
 		}
+		rss := podcast.FeedData
 
-		if xml.Channel.Title != "Lateral with Tom Scott" {
-			t.Errorf("Expected 'Lateral with Tom Scott' got %s", xml.Channel.Title)
+		if rss.Channel.Title != "Lateral with Tom Scott" {
+			t.Errorf("Expected 'Lateral with Tom Scott' got %s", rss.Channel.Title)
 		}
 	})
 }

@@ -18,26 +18,31 @@ type AddPodcastInput struct {
 	RssFeed string `json:"rssFeed"`
 }
 
+type PodcastsReponse struct {
+	Error bool                       `json:"error"`
+	Data  []fetching.PodcastMetaData `json:"data"`
+}
+
 func (app *Application) podcastsHandlerGet(w http.ResponseWriter, _ *http.Request) {
 
 	podcastData, err := storage.GetAllPodcasts(app.Db)
 
 	if err != nil {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprint(w, "{\"error\":true, \"message\":\"Unable to get all podcasts\"}")
+		app.writeError(w, http.StatusInternalServerError, "Unable to get all podcasts")
 		return
 	}
 
-	jsonPodcastData, err := json.Marshal(podcastData)
+	podcastResponse := PodcastsReponse{
+		Error: false,
+		Data:  podcastData,
+	}
+
+	err = app.writeJson(w, http.StatusOK, podcastResponse)
 
 	if err != nil {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprint(w, "{\"error\":true, \"message\":\"Unable to convert to JSON\"}")
+		app.writeError(w, http.StatusInternalServerError, "Unable to convert podcast data to JSON")
 		return
 	}
-
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprint(w, string(jsonPodcastData))
 }
 
 func (app *Application) podcastsHandlerPost(w http.ResponseWriter, r *http.Request) {
@@ -48,27 +53,23 @@ func (app *Application) podcastsHandlerPost(w http.ResponseWriter, r *http.Reque
 	err := decoder.Decode(&addPodcastInput)
 
 	if err != nil {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprint(w, "{\"error\":true, \"message\":\"Unable to interpret JSON object\"}")
+		app.writeError(w, http.StatusBadRequest, "Unable to interpret JSON structure")
 		return
 	}
 
 	podcast, err := fetching.FetchPodcast(addPodcastInput.RssFeed)
 
 	if err != nil {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, "{\"error\":true, \"message\":\"Unable to fetch podcast for feed %s\"}", addPodcastInput.RssFeed)
+		app.writeError(w, http.StatusBadRequest, fmt.Sprintf("Unable to fetch podcast for feed %s", addPodcastInput.RssFeed))
 		return
 	}
 
 	err = storage.AddFullPodcast(podcast, app.Db)
 
 	if err != nil {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, "{\"error\":true, \"message\":\"Unable to add podcast for feed %s\"}", addPodcastInput.RssFeed)
+		app.writeError(w, http.StatusInternalServerError, fmt.Sprintf("Unable to add podcast for feed %s", addPodcastInput.RssFeed))
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprintf(w, "{\"error\":false, \"message\":\"Successfuly added %s\"}", podcast.FeedData.Channel.Title)
+	app.writeJson(w, http.StatusOK, app.createSuccessMessage(fmt.Sprintf("Successfully added podcast %s", podcast.FeedData.Channel.Title)))
 }

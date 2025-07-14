@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Podcast Frontend</title>
+</head>
+
+<body>
+
+    <head>
+        <h1>Go Podcast Frontend</h1>
+    </head>
+
+    <section id="addPodcast">
+        <h2>Add Podcast</h2>
+        <form id="addPodcastForm" onsubmit="onFormSubmit(event)">
+            <label for="podcastUrl">Podcast URL:</label>
+            <input type="text" id="podcastUrl" name="podcastUrl" required>
+            <button type="submit">Add Podcast</button>
+
+
+    </section>
+
+    <section id="viewPodcast">
+
+    </section>
+</body>
+
+<script>
+
+    async function onFormSubmit(e) {
+        e.preventDefault();
+
+        const podcastUrlInput = document.querySelector("#podcastUrl");
+
+        const podcastUrl = podcastUrlInput.value;
+        podcastUrlInput.value = "";
+
+        const targetUrl = "http://localhost:8080/podcasts";
+
+        const response = await fetch(
+            targetUrl,
+            {
+                body: JSON.stringify({
+                    rssFeed: podcastUrl
+                }),
+                method: "POST"
+            }
+        );
+
+        if(response.status != 200) {
+            alert(`Something went wrong adding feed ${podcastUrl}`)
+            return;
+        }
+
+        const json = await response.json();
+
+        if(json.error) {
+            alert(`Something went wrong adding feed ${podcastUrl}`)
+            return;
+        }
+
+        const message = json.message;
+
+        alert(message);
+
+        location.reload();
+    }
+
+    function convertPodcastToCard(podcast) {
+        const card = document.createElement("div");
+        card.id = "podcast-card";
+
+        const cardTitle = document.createElement("h3");
+        cardTitle.innerText = podcast.Title;
+
+        card.appendChild(cardTitle);
+
+        return card;
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const viewPodcastSection = document.querySelector("#viewPodcast");
+
+        if (!viewPodcastSection) {
+            console.error("Unable to load view podcast section");
+            return;
+        }
+
+        const targetUrl = "http://localhost:8080/podcasts";
+
+        const response = await fetch(
+            targetUrl,
+            {
+                method: "GET"
+            }
+        );
+
+        if(response.status != 200) {
+            console.error("Something went wrong retrieving podcasts");
+            return;
+        }
+
+        const json = await response.json()
+
+        if(json.error) {
+            console.error("Something went wrong retrieving podcasts");
+            return;
+        }
+
+        const data = json.data;
+
+        viewPodcastSection.childNodes.length = 0;
+
+        const heading = document.createElement("h2");
+        heading.innerText = "Existing Podcasts";
+
+        viewPodcastSection.appendChild(heading);
+
+        const podcastCards = document.createElement("div");
+        podcastCards.id = "podcast-cards"
+
+        for(const podcast of data) {
+            const card = convertPodcastToCard(podcast);
+
+            podcastCards.appendChild(card);
+        }
+
+        viewPodcastSection.appendChild(podcastCards);
+
+    });
+</script>
+
+</html>

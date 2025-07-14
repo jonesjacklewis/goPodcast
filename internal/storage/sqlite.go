@@ -45,7 +45,7 @@ func CreateDatabase(db *sql.DB) error {
 }
 
 func AddEpisode(podcastEpisode fetching.Item, podcastId int, db *sql.DB) error {
-	AddPodcastEpisodeQuery := `
+	addPodcastEpisodeQuery := `
 	INSERT OR IGNORE
 	INTO episodes
 	(PodcastId, EpisodeTitle, EpisodeLink, EnclosureUrl)
@@ -53,7 +53,7 @@ func AddEpisode(podcastEpisode fetching.Item, podcastId int, db *sql.DB) error {
 	(?, ?, ?, ?)
 	`
 
-	preparedStatementAddEpsiode, err := db.Prepare(AddPodcastEpisodeQuery)
+	preparedStatementAddEpsiode, err := db.Prepare(addPodcastEpisodeQuery)
 
 	if err != nil {
 		return fmt.Errorf("error creating prepared statement for inserting podcast episode")
@@ -71,7 +71,7 @@ func AddEpisode(podcastEpisode fetching.Item, podcastId int, db *sql.DB) error {
 }
 
 func AddPodcast(podcast fetching.Podcast, db *sql.DB) (int, error) {
-	AddPodcastQueryString := `
+	addPodcastQueryString := `
 	INSERT OR IGNORE
 	INTO podcasts
 	(Title, Url, Description, Image)
@@ -79,15 +79,15 @@ func AddPodcast(podcast fetching.Podcast, db *sql.DB) (int, error) {
 	(?, ?, ?, ?)
 	`
 
-	preparedStatementAddPodcast, err := db.Prepare(AddPodcastQueryString)
+	preparedStatementaddPodcast, err := db.Prepare(addPodcastQueryString)
 
 	if err != nil {
 		return -1, fmt.Errorf("error creating prepared statement for inserting podcast %s", err.Error())
 	}
 
-	defer preparedStatementAddPodcast.Close()
+	defer preparedStatementaddPodcast.Close()
 
-	res, err := preparedStatementAddPodcast.Exec(podcast.FeedData.Channel.Title, podcast.Url, podcast.FeedData.Channel.Description, podcast.FeedData.Channel.Image.Url)
+	res, err := preparedStatementaddPodcast.Exec(podcast.FeedData.Channel.Title, podcast.Url, podcast.FeedData.Channel.Description, podcast.FeedData.Channel.Image.Url)
 
 	if err != nil {
 		return -1, fmt.Errorf("error inserting podcast %s", err.Error())
@@ -150,4 +150,78 @@ func AddFullPodcast(podcast fetching.Podcast, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func GetEpisodeCountByPodcastUrl(podcastUrl string, db *sql.DB) (int, error) {
+	getEpisodeCountQuery := `
+	SELECT COUNT(*)
+	FROM episodes
+	JOIN podcasts
+	ON episodes.PodcastId = podcasts.Id
+	WHERE podcasts.Url = ?
+	`
+
+	getEpisodeCountPreparedStatement, err := db.Prepare(getEpisodeCountQuery)
+
+	if err != nil {
+		return -1, fmt.Errorf("error creating prepared statement for GetEpisodeCount %s", err.Error())
+	}
+
+	var episodeCount int
+
+	err = getEpisodeCountPreparedStatement.QueryRow(podcastUrl).Scan(&episodeCount)
+
+	if err != nil {
+		return -1, fmt.Errorf("error running query for getting episode count %s", err.Error())
+	}
+
+	return episodeCount, nil
+}
+
+func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
+	getAllPodcastsQuery := `
+	SELECT Title, Url, Description
+	FROM podcasts
+	`
+
+	rows, err := db.Query(getAllPodcastsQuery)
+
+	if err != nil {
+		return []fetching.PodcastMetaData{}, fmt.Errorf("error getting all podcasts %s", err.Error())
+	}
+
+	defer rows.Close()
+
+	var basicPodcastData []fetching.BasicPodcastData
+
+	for rows.Next() {
+		var basicPodcastDataItem fetching.BasicPodcastData
+
+		if err = rows.Scan(&basicPodcastDataItem.Title, &basicPodcastDataItem.Url, &basicPodcastDataItem.Description); err == nil {
+
+			basicPodcastData = append(basicPodcastData, basicPodcastDataItem)
+		}
+
+	}
+
+	var podcastMetaData []fetching.PodcastMetaData
+
+	for _, item := range basicPodcastData {
+		episodeCount, err := GetEpisodeCountByPodcastUrl(item.Url, db)
+
+		if err != nil {
+			return []fetching.PodcastMetaData{}, fmt.Errorf("error getting all podcasts with episode counts %s", err.Error())
+		}
+
+		podcastMetaDataItem := fetching.PodcastMetaData{
+			Title:            item.Title,
+			Description:      item.Description,
+			Url:              item.Url,
+			NumberOfEpisodes: episodeCount,
+		}
+
+		podcastMetaData = append(podcastMetaData, podcastMetaDataItem)
+	}
+
+	return podcastMetaData, nil
 }

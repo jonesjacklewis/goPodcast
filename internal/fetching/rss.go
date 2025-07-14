@@ -36,6 +36,19 @@ type Podcast struct {
 	Url      string
 }
 
+type BasicPodcastData struct {
+	Title       string
+	Url         string
+	Description string
+}
+
+type PodcastMetaData struct {
+	Title            string
+	Url              string
+	Description      string
+	NumberOfEpisodes int
+}
+
 func FetchPodcast(url string) (Podcast, error) {
 	response, err := http.Get(url)
 

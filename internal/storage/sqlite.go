@@ -152,36 +152,13 @@ func AddFullPodcast(podcast fetching.Podcast, db *sql.DB) error {
 	return nil
 }
 
-func GetEpisodeCountByPodcastUrl(podcastUrl string, db *sql.DB) (int, error) {
-	getEpisodeCountQuery := `
-	SELECT COUNT(*)
-	FROM episodes
-	JOIN podcasts
-	ON episodes.PodcastId = podcasts.Id
-	WHERE podcasts.Url = ?
-	`
-
-	getEpisodeCountPreparedStatement, err := db.Prepare(getEpisodeCountQuery)
-
-	if err != nil {
-		return -1, fmt.Errorf("error creating prepared statement for GetEpisodeCount %s", err.Error())
-	}
-
-	var episodeCount int
-
-	err = getEpisodeCountPreparedStatement.QueryRow(podcastUrl).Scan(&episodeCount)
-
-	if err != nil {
-		return -1, fmt.Errorf("error running query for getting episode count %s", err.Error())
-	}
-
-	return episodeCount, nil
-}
-
 func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
 	getAllPodcastsQuery := `
-	SELECT Title, Url, Description
-	FROM podcasts
+	SELECT p.Title, p.Url, p.Description, COUNT(e.Id)
+	FROM podcasts p
+	LEFT JOIN episodes e
+	ON p.Id = e.PodcastId
+	GROUP BY p.Id
 	`
 
 	rows, err := db.Query(getAllPodcastsQuery)
@@ -192,36 +169,16 @@ func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
 
 	defer rows.Close()
 
-	var basicPodcastData []fetching.BasicPodcastData
+	var podcastMetadata []fetching.PodcastMetaData
 
 	for rows.Next() {
-		var basicPodcastDataItem fetching.BasicPodcastData
+		var podcastMetadataItem fetching.PodcastMetaData
 
-		if err = rows.Scan(&basicPodcastDataItem.Title, &basicPodcastDataItem.Url, &basicPodcastDataItem.Description); err == nil {
-
-			basicPodcastData = append(basicPodcastData, basicPodcastDataItem)
+		if err = rows.Scan(&podcastMetadataItem.Title, &podcastMetadataItem.Url, &podcastMetadataItem.Description, &podcastMetadataItem.NumberOfEpisodes); err == nil {
+			podcastMetadata = append(podcastMetadata, podcastMetadataItem)
 		}
 
 	}
 
-	var podcastMetaData []fetching.PodcastMetaData
-
-	for _, item := range basicPodcastData {
-		episodeCount, err := GetEpisodeCountByPodcastUrl(item.Url, db)
-
-		if err != nil {
-			return []fetching.PodcastMetaData{}, fmt.Errorf("error getting all podcasts with episode counts %s", err.Error())
-		}
-
-		podcastMetaDataItem := fetching.PodcastMetaData{
-			Title:            item.Title,
-			Description:      item.Description,
-			Url:              item.Url,
-			NumberOfEpisodes: episodeCount,
-		}
-
-		podcastMetaData = append(podcastMetaData, podcastMetaDataItem)
-	}
-
-	return podcastMetaData, nil
+	return podcastMetadata, nil
 }

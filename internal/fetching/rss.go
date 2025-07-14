@@ -36,12 +36,6 @@ type Podcast struct {
 	Url      string
 }
 
-type BasicPodcastData struct {
-	Title       string
-	Url         string
-	Description string
-}
-
 type PodcastMetaData struct {
 	Title            string
 	Url              string

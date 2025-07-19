@@ -37,6 +37,7 @@ type Podcast struct {
 }
 
 type PodcastMetaData struct {
+	Id               int
 	Title            string
 	Url              string
 	Description      string

@@ -154,7 +154,7 @@ func AddFullPodcast(podcast fetching.Podcast, db *sql.DB) error {
 
 func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
 	getAllPodcastsQuery := `
-	SELECT p.Id, p.Title, p.Url, p.Description, COUNT(e.Id)
+	SELECT p.Id, p.Title, p.Url, p.Description, p.Image, COUNT(e.Id)
 	FROM podcasts p
 	LEFT JOIN episodes e
 	ON p.Id = e.PodcastId
@@ -174,7 +174,7 @@ func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
 	for rows.Next() {
 		var podcastMetadataItem fetching.PodcastMetaData
 
-		if err = rows.Scan(&podcastMetadataItem.Id, &podcastMetadataItem.Title, &podcastMetadataItem.Url, &podcastMetadataItem.Description, &podcastMetadataItem.NumberOfEpisodes); err == nil {
+		if err = rows.Scan(&podcastMetadataItem.Id, &podcastMetadataItem.Title, &podcastMetadataItem.Url, &podcastMetadataItem.Description, &podcastMetadataItem.Image, &podcastMetadataItem.NumberOfEpisodes); err == nil {
 			podcastMetadata = append(podcastMetadata, podcastMetadataItem)
 		}
 

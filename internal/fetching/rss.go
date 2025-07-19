@@ -42,6 +42,7 @@ type PodcastMetaData struct {
 	Url              string
 	Description      string
 	NumberOfEpisodes int
+	Image            string
 }
 
 func FetchPodcast(url string) (Podcast, error) {

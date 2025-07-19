@@ -65,3 +65,9 @@ The core data engine is complete. The next phases will focus on building out the
     -   [ ] Implement user authentication.
     -   [ ] Create a background worker to periodically refresh all subscribed feeds.
     -   [ ] Add functionality to download and cache audio files for offline listening.
+
+## Other TODO
+
+- [ ] Create `GET /podcasts/{id}` endpoint to get more than just metadata
+- [ ] Create `GET /podcasts/{id}/episodes` endpoint to get all episodes
+  - [ ] Create `GET /podcasts/{id}/episodes/{id}` to get data about a single episode

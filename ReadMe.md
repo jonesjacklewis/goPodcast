@@ -54,13 +54,13 @@ The application currently runs as a command-line script that fetches a single, h
 The core data engine is complete. The next phases will focus on building out the application into a full service.
 
 -   [ ] **Phase 1: Project Restructuring**
-    -   [ ] Reorganize code into logical packages (`storage`, `fetching`, `api`).
+    -   [x] Reorganize code into logical packages (`storage`, `fetching`, `api`).
 -   [ ] **Phase 2: API Development**
-    -   [ ] Implement an HTTP server.
+    -   [x] Implement an HTTP server.
     -   [ ] Create RESTful API endpoints (`GET /podcasts`, `GET /podcasts/{id}/episodes`).
-    -   [ ] Create a `POST /podcasts` endpoint to allow users to subscribe to new feeds via the API.
+    -   [x] Create a `POST /podcasts` endpoint to add new podcasts.
 -   [ ] **Phase 3: Frontend Client**
-    -   [ ] Develop a simple web client (likely in React) to consume the API.
+    -   [x] Develop a simple web client (initially vanilla, later React) to consume the API.
 -   [ ] **Phase 4: Advanced Features**
     -   [ ] Implement user authentication.
     -   [ ] Create a background worker to periodically refresh all subscribed feeds.

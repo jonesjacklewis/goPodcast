@@ -30,6 +30,39 @@ type PodcastReponse struct {
 	Data  fetching.Podcast `json:"data"`
 }
 
+type EpisodesResponse struct {
+	Error bool               `json:"error"`
+	Data  []fetching.Episode `json:"data"`
+}
+
+func (app *Application) podcastsHandlerGetEpisodes(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if _, err := strconv.Atoi(id); err != nil {
+		app.writeError(w, http.StatusBadRequest, "ID must be an integer")
+		return
+	}
+
+	episodes, err := storage.GetPodcastEpisodes(app.Db, id)
+
+	if err != nil {
+		app.writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(episodes) == 0 {
+		app.writeError(w, http.StatusNotFound, fmt.Sprintf("No episodes for podcast with ID = %s", id))
+		return
+	}
+
+	var episodesResponse EpisodesResponse = EpisodesResponse{
+		Data:  episodes,
+		Error: false,
+	}
+
+	app.writeJson(w, 200, episodesResponse)
+}
+
 func (app *Application) podcastsHandlerGetById(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

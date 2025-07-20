@@ -45,6 +45,13 @@ type PodcastMetaData struct {
 	Image            string
 }
 
+type Episode struct {
+	Id           int    `json:"id"`
+	Title        string `json:"title"`
+	Link         string `json:"link"`
+	EnclosureUrl string `json:"enclosureUrl"`
+}
+
 func FetchPodcast(url string) (Podcast, error) {
 	response, err := http.Get(url)
 

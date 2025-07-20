@@ -259,3 +259,40 @@ func GetPodcastById(db *sql.DB, id string) (fetching.Podcast, error) {
 
 	return podcast, nil
 }
+
+func GetPodcastEpisodes(db *sql.DB, podcastId string) ([]fetching.Episode, error) {
+	getAllPodcastEpisodesQuery := `
+	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl
+	FROM episodes e
+	WHERE
+	e.PodcastId = ?
+	`
+
+	preparedGetAllPodcastEpisodes, err := db.Prepare(getAllPodcastEpisodesQuery)
+
+	if err != nil {
+		return []fetching.Episode{}, fmt.Errorf("unable to create prepared statement for GetPodcastEpisodes")
+	}
+
+	rows, err := preparedGetAllPodcastEpisodes.Query(podcastId)
+
+	if err != nil {
+		return []fetching.Episode{}, fmt.Errorf("error executing prepared statement for GetPodcastEpisodes")
+	}
+
+	var episodes []fetching.Episode
+
+	for rows.Next() {
+		var episode fetching.Episode
+
+		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl)
+
+		if err != nil {
+			return []fetching.Episode{}, fmt.Errorf("error extracting fields in GetPodcastEpisodes")
+		}
+
+		episodes = append(episodes, episode)
+	}
+
+	return episodes, nil
+}

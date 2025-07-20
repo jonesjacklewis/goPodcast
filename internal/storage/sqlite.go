@@ -182,3 +182,80 @@ func GetAllPodcasts(db *sql.DB) ([]fetching.PodcastMetaData, error) {
 
 	return podcastMetadata, nil
 }
+
+func GetPodcastEpisodesById(db *sql.DB, id string) ([]fetching.Item, error) {
+	getEpisodesQuery := `
+	SELECT e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl
+	FROM episodes e
+	WHERE e.PodcastId = ?
+	`
+
+	preparedStatementEpisodes, err := db.Prepare(getEpisodesQuery)
+
+	if err != nil {
+		return []fetching.Item{}, fmt.Errorf("error creating prepared statement for GetPodcastEpisodesById")
+	}
+
+	rows, err := preparedStatementEpisodes.Query(id)
+
+	if err != nil {
+		return []fetching.Item{}, fmt.Errorf("error running query for GetPodcastEpisodesById")
+	}
+
+	defer rows.Close()
+
+	var episodes []fetching.Item
+
+	for rows.Next() {
+
+		var episode fetching.Item
+
+		if err = rows.Scan(&episode.Title, &episode.Link, &episode.Enclosure.Url); err != nil {
+			return []fetching.Item{}, fmt.Errorf("error extracting episode in GetPodcastEpisodesById")
+		}
+
+		episodes = append(episodes, episode)
+
+	}
+
+	return episodes, nil
+
+}
+
+func GetPodcastById(db *sql.DB, id string) (fetching.Podcast, error) {
+	getPodcastQuery := `
+	SELECT p.Title, p.Description, p.Image, p.Url
+	FROM podcasts p
+	WHERE p.Id = ?
+	`
+
+	preparedStatementPodcast, err := db.Prepare(getPodcastQuery)
+
+	if err != nil {
+		return fetching.Podcast{}, fmt.Errorf("error creating prepared statement for GetPodcastById")
+	}
+
+	row := preparedStatementPodcast.QueryRow(id)
+
+	var podcast fetching.Podcast
+
+	err = row.Scan(&podcast.FeedData.Channel.Title, &podcast.FeedData.Channel.Description, &podcast.FeedData.Channel.Image.Url, &podcast.Url)
+
+	if err == sql.ErrNoRows {
+		return fetching.Podcast{}, nil
+	}
+
+	if err != nil {
+		return fetching.Podcast{}, fmt.Errorf("error retrieving podcast with ID = %s, %s", id, err.Error())
+	}
+
+	items, err := GetPodcastEpisodesById(db, id)
+
+	if err != nil {
+		return fetching.Podcast{}, fmt.Errorf("error retrieving episodes for podcast with ID = %s", id)
+	}
+
+	podcast.FeedData.Channel.Items = items
+
+	return podcast, nil
+}

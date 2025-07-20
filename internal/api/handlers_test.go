@@ -287,4 +287,58 @@ func TestHandlers(t *testing.T) {
 	if len(errorMessage.PodcastMetaData) == 0 {
 		t.Fatalf("Expected to have podcast data")
 	}
+
+	targetUrl = apiServer.URL + "/podcasts/1"
+
+	req, err = http.NewRequest(http.MethodGet, targetUrl, nil)
+
+	if err != nil {
+		t.Errorf("Exepceted no error, got %s", err.Error())
+	}
+
+	res, err = apiServer.Client().Do(req)
+
+	if err != nil {
+		t.Errorf("Expected no err on /podcasts/1 got %s", err.Error())
+	}
+
+	var podastResponse PodcastReponse
+
+	decoder = json.NewDecoder(res.Body)
+
+	err = decoder.Decode(&podastResponse)
+
+	if err != nil {
+		t.Errorf("Error decoding PodcastResponse")
+	}
+
+	if podastResponse.Error {
+		t.Errorf("Expected no error on PodcastResponse")
+	}
+
+	if podastResponse.Data.FeedData.Channel.Title != "Lateral with Tom Scott" {
+		t.Errorf("Unexpected title %s", podastResponse.Data.FeedData.Channel.Title)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("Expected status %d on /podcasts/1 got %d", http.StatusOK, res.StatusCode)
+	}
+
+	targetUrl = apiServer.URL + "/podcasts/2"
+
+	req, err = http.NewRequest(http.MethodGet, targetUrl, nil)
+
+	if err != nil {
+		t.Errorf("Exepceted no error, got %s", err.Error())
+	}
+
+	res, err = apiServer.Client().Do(req)
+
+	if err != nil {
+		t.Errorf("Expected no err on /podcasts/2 got %s", err.Error())
+	}
+
+	if res.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status %d on /podcasts/2 got %d", http.StatusNotFound, res.StatusCode)
+	}
 }

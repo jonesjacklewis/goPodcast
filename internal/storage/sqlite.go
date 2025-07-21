@@ -316,10 +316,41 @@ func GetPodcastEpisodes(db *sql.DB, podcastId string) ([]fetching.Episode, error
 	for rows.Next() {
 		var episode fetching.Episode
 
-		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.Title)
+		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.PodcastName)
 
 		if err != nil {
 			return []fetching.Episode{}, fmt.Errorf("error extracting fields in GetPodcastEpisodes")
+		}
+
+		episodes = append(episodes, episode)
+	}
+
+	return episodes, nil
+}
+
+func GetAllEpisodes(db *sql.DB) ([]fetching.Episode, error) {
+	getAllPodcastEpisodesQuery := `
+	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl, p.Title
+	FROM episodes e
+	JOIN podcasts p
+	ON p.Id = e.PodcastId
+	`
+
+	rows, err := db.Query(getAllPodcastEpisodesQuery)
+
+	if err != nil {
+		return []fetching.Episode{}, fmt.Errorf("error executing prepared statement for GetAllEpisodes")
+	}
+
+	var episodes []fetching.Episode
+
+	for rows.Next() {
+		var episode fetching.Episode
+
+		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.PodcastName)
+
+		if err != nil {
+			return []fetching.Episode{}, fmt.Errorf("error extracting fields in GetAllEpisodes")
 		}
 
 		episodes = append(episodes, episode)

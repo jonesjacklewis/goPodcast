@@ -26,5 +26,9 @@ func (app *Application) Routes() http.Handler {
 		c.Get("/{podcastId}/episodes/{episodeId}", http.HandlerFunc(app.podcastsHandlerGetEpisode))
 		c.Post("/", http.HandlerFunc(app.podcastsHandlerPost))
 	})
+
+	r.Route("/episodes", func(c chi.Router) {
+		c.Get("/", http.HandlerFunc(app.episodesHandlerGet))
+	})
 	return r
 }

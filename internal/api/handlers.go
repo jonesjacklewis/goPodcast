@@ -194,3 +194,24 @@ func (app *Application) podcastsHandlerPost(w http.ResponseWriter, r *http.Reque
 
 	app.writeJson(w, http.StatusOK, app.createSuccessMessage(fmt.Sprintf("Successfully added podcast %s", podcast.FeedData.Channel.Title)))
 }
+
+func (app *Application) episodesHandlerGet(w http.ResponseWriter, _ *http.Request) {
+	episodeData, err := storage.GetAllEpisodes(app.Db)
+
+	if err != nil {
+		app.writeError(w, http.StatusInternalServerError, "Unable to get all episodes")
+		return
+	}
+
+	podcastResponse := EpisodesResponse{
+		Error: false,
+		Data:  episodeData,
+	}
+
+	err = app.writeJson(w, http.StatusOK, podcastResponse)
+
+	if err != nil {
+		app.writeError(w, http.StatusInternalServerError, "Unable to convert episode data to JSON")
+		return
+	}
+}

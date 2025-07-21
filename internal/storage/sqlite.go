@@ -358,3 +358,31 @@ func GetAllEpisodes(db *sql.DB) ([]fetching.Episode, error) {
 
 	return episodes, nil
 }
+
+func GetEpisodeById(db *sql.DB, episodeId string) (fetching.Episode, error) {
+	getAllPodcastEpisodeQuery := `
+	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl, p.Title
+	FROM episodes e
+	JOIN podcasts p
+	ON p.Id = e.PodcastId
+	WHERE e.Id = ?
+	`
+
+	getAllPodcastEpisodeQueryPreparedStatement, err := db.Prepare(getAllPodcastEpisodeQuery)
+
+	if err != nil {
+		return fetching.Episode{}, fmt.Errorf("error creating prepared statement for GetEpisodeById")
+	}
+
+	row := getAllPodcastEpisodeQueryPreparedStatement.QueryRow(episodeId)
+
+	var episode fetching.Episode
+
+	err = row.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.PodcastName)
+
+	if err != nil {
+		return fetching.Episode{}, fmt.Errorf("error extracting fields in GetEpisodeById")
+	}
+
+	return episode, nil
+}

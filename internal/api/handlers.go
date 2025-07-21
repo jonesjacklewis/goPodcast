@@ -215,3 +215,25 @@ func (app *Application) episodesHandlerGet(w http.ResponseWriter, _ *http.Reques
 		return
 	}
 }
+
+func (app *Application) episodesHandlerGetById(w http.ResponseWriter, r *http.Request) {
+	episodeId := chi.URLParam(r, "id")
+
+	if _, err := strconv.Atoi(episodeId); err != nil {
+		app.writeError(w, http.StatusBadRequest, "ID must be an integer")
+		return
+	}
+
+	episode, err := storage.GetEpisodeById(app.Db, episodeId)
+
+	if err != nil {
+		app.writeError(w, http.StatusInternalServerError, fmt.Sprintf("Error retrieving episode using ID %s", episodeId))
+	}
+
+	episodeResponse := EpisodeResponse{
+		Error: false,
+		Data:  episode,
+	}
+
+	app.writeJson(w, 200, episodeResponse)
+}

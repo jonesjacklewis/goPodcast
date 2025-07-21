@@ -484,4 +484,34 @@ func TestHandlers(t *testing.T) {
 		t.Errorf("Expected episodes on GET %s but got none", targetUrl)
 	}
 
+	// here
+
+	targetUrl = apiServer.URL + "/episodes/1"
+
+	req, err = http.NewRequest(http.MethodGet, targetUrl, nil)
+
+	if err != nil {
+		t.Errorf("Expected no error on creating GET to %s got %s", targetUrl, err.Error())
+	}
+
+	res, err = apiServer.Client().Do(req)
+
+	if err != nil {
+		t.Errorf("Expected no error on GET to %s got %s", targetUrl, err.Error())
+	}
+
+	var episodeResponseGetById EpisodeResponse
+
+	decoder = json.NewDecoder(res.Body)
+
+	err = decoder.Decode(&episodeResponseGetById)
+
+	if err != nil {
+		t.Errorf("Expected no error on decode to %s got %s", targetUrl, err.Error())
+	}
+
+	if episodeResponseGetById.Error {
+		t.Errorf("Expected no error on GET %s", targetUrl)
+	}
+
 }

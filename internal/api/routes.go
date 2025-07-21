@@ -29,6 +29,7 @@ func (app *Application) Routes() http.Handler {
 
 	r.Route("/episodes", func(c chi.Router) {
 		c.Get("/", http.HandlerFunc(app.episodesHandlerGet))
+		c.Get("/{id}", http.HandlerFunc(app.episodesHandlerGetById))
 	})
 	return r
 }

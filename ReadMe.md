@@ -73,5 +73,5 @@ The core data engine is complete. The next phases will focus on building out the
 - [x] Create `GET /podcasts/{id}/episodes` endpoint to get all episodes
   - [x] Create `GET /podcasts/{id}/episodes/{id}` to get data about a single episode
 - [x] Create `GET /episodes` endpoint to get the entire list of episodes
-- [ ] Create `GET /episodes/{id}` to get a single episode by Id
+- [x] Create `GET /episodes/{id}` to get a single episode by Id
 - [ ] Create `POST /podcass/{id}/refresh` endpoint to update a podcast

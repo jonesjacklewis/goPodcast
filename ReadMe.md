@@ -53,11 +53,11 @@ The application currently runs as a command-line script that fetches a single, h
 
 The core data engine is complete. The next phases will focus on building out the application into a full service.
 
--   [ ] **Phase 1: Project Restructuring**
+-   [x] **Phase 1: Project Restructuring**
     -   [x] Reorganize code into logical packages (`storage`, `fetching`, `api`).
--   [ ] **Phase 2: API Development**
+-   [x] **Phase 2: API Development**
     -   [x] Implement an HTTP server.
-    -   [ ] Create RESTful API endpoints (`GET /podcasts`, `GET /podcasts/{id}/episodes`).
+    -   [x] Create RESTful API endpoints (`GET /podcasts`, `GET /podcasts/{id}/episodes`).
     -   [x] Create a `POST /podcasts` endpoint to add new podcasts.
 -   [ ] **Phase 3: Frontend Client**
     -   [x] Develop a simple web client (initially vanilla, later React) to consume the API.
@@ -71,3 +71,6 @@ The core data engine is complete. The next phases will focus on building out the
 - [x] Create `GET /podcasts/{id}` endpoint to get more than just metadata
 - [x] Create `GET /podcasts/{id}/episodes` endpoint to get all episodes
   - [x] Create `GET /podcasts/{id}/episodes/{id}` to get data about a single episode
+- [ ] Create `GET /episodes` endpoint to get the entire list of episodes
+- [ ] Create `GET /episodes/{id}` to get a single episode by Id
+- [ ] Create `POST /podcass/{id}/refresh` endpoint to update a podcast

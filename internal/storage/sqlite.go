@@ -260,10 +260,41 @@ func GetPodcastById(db *sql.DB, id string) (fetching.Podcast, error) {
 	return podcast, nil
 }
 
+func GetEpisodeForPodcast(db *sql.DB, podcastId int, episodeId int) (fetching.Episode, error) {
+	getPodcastEpisodeQuery := `
+	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl, p.Title
+	FROM episodes e
+	JOIN podcasts p
+	ON e.PodcastId = p.Id
+	WHERE p.Id = ?
+	AND e.Id = ?
+	`
+
+	preparedGetPodcastEpisode, err := db.Prepare(getPodcastEpisodeQuery)
+
+	if err != nil {
+		return fetching.Episode{}, fmt.Errorf("unable to create prepared statement for GetEpisode")
+	}
+
+	row := preparedGetPodcastEpisode.QueryRow(podcastId, episodeId)
+
+	var episode fetching.Episode
+
+	err = row.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.PodcastName)
+
+	if err != nil {
+		return fetching.Episode{}, err
+	}
+
+	return episode, nil
+}
+
 func GetPodcastEpisodes(db *sql.DB, podcastId string) ([]fetching.Episode, error) {
 	getAllPodcastEpisodesQuery := `
-	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl
+	SELECT e.Id, e.EpisodeTitle, e.EpisodeLink, e.EnclosureUrl, p.Title
 	FROM episodes e
+	JOIN podcasts p
+	ON p.Id = e.PodcastId
 	WHERE
 	e.PodcastId = ?
 	`
@@ -285,7 +316,7 @@ func GetPodcastEpisodes(db *sql.DB, podcastId string) ([]fetching.Episode, error
 	for rows.Next() {
 		var episode fetching.Episode
 
-		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl)
+		err = rows.Scan(&episode.Id, &episode.Title, &episode.Link, &episode.EnclosureUrl, &episode.Title)
 
 		if err != nil {
 			return []fetching.Episode{}, fmt.Errorf("error extracting fields in GetPodcastEpisodes")

@@ -50,6 +50,7 @@ type Episode struct {
 	Title        string `json:"title"`
 	Link         string `json:"link"`
 	EnclosureUrl string `json:"enclosureUrl"`
+	PodcastName  string `json:"podcastName"`
 }
 
 func FetchPodcast(url string) (Podcast, error) {

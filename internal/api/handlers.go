@@ -35,6 +35,51 @@ type EpisodesResponse struct {
 	Data  []fetching.Episode `json:"data"`
 }
 
+type EpisodeResponse struct {
+	Error bool             `json:"error"`
+	Data  fetching.Episode `json:"data"`
+}
+
+func (app *Application) podcastsHandlerGetEpisode(w http.ResponseWriter, r *http.Request) {
+
+	podcastIdStr := chi.URLParam(r, "podcastId")
+
+	podcastId, err := strconv.Atoi(podcastIdStr)
+
+	if err != nil {
+		app.writeError(w, http.StatusBadRequest, "Podcast ID must be an integer")
+		return
+	}
+
+	episodeIdStr := chi.URLParam(r, "episodeId")
+
+	episodeId, err := strconv.Atoi(episodeIdStr)
+
+	if err != nil {
+		app.writeError(w, http.StatusBadRequest, "Episode ID must be an integer")
+		return
+	}
+
+	episode, err := storage.GetEpisodeForPodcast(app.Db, podcastId, episodeId)
+
+	if err == sql.ErrNoRows {
+		app.writeError(w, http.StatusNotFound, fmt.Sprintf("No episode found for podcastId %d and episodeId %d", podcastId, episodeId))
+		return
+	}
+
+	if err != nil {
+		app.writeError(w, http.StatusInternalServerError, "Error extracting episode details")
+		return
+	}
+
+	var episodeResponse EpisodeResponse = EpisodeResponse{
+		Error: false,
+		Data:  episode,
+	}
+
+	app.writeJson(w, 200, episodeResponse)
+}
+
 func (app *Application) podcastsHandlerGetEpisodes(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 

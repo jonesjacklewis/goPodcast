@@ -70,4 +70,4 @@ The core data engine is complete. The next phases will focus on building out the
 
 - [x] Create `GET /podcasts/{id}` endpoint to get more than just metadata
 - [x] Create `GET /podcasts/{id}/episodes` endpoint to get all episodes
-  - [ ] Create `GET /podcasts/{id}/episodes/{id}` to get data about a single episode
+  - [x] Create `GET /podcasts/{id}/episodes/{id}` to get data about a single episode

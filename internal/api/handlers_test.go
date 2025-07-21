@@ -396,4 +396,62 @@ func TestHandlers(t *testing.T) {
 		t.Errorf("Expected code %d for /podcasts/2/episodes got %d", http.StatusNotFound, res.StatusCode)
 	}
 
+	targetUrl = apiServer.URL + "/podcasts/1/episodes/1"
+
+	req, err = http.NewRequest(http.MethodGet, targetUrl, nil)
+
+	if err != nil {
+		t.Errorf("Expected no error when creating request for /podcasts/1/episodes/1, got %s", err.Error())
+	}
+
+	res, err = apiServer.Client().Do(req)
+
+	if err != nil {
+		t.Errorf("Expected no error when mkaing request for /podcasts/1/episodes/1, got %s", err.Error())
+	}
+
+	if res.StatusCode != http.StatusOK {
+		t.Errorf("Expected code %d for /podcasts/1/episodes/1 got %d", http.StatusOK, res.StatusCode)
+	}
+
+	var episodeResponse EpisodeResponse
+
+	decoder = json.NewDecoder(res.Body)
+
+	err = decoder.Decode(&episodeResponse)
+
+	if err != nil {
+		t.Errorf("Unable to decode response for /podcasts/1/episodes/1")
+	}
+
+	if episodesResponse.Error {
+		t.Errorf("Expected no error on GET /podcasts/1/episodes/1")
+	}
+
+	expectedTitle := "Let's visit Greenland!"
+
+	if episodeResponse.Data.Title != expectedTitle {
+		t.Errorf("Exepected %s got %s for /podcasts/1/episodes/1", expectedTitle, episodeResponse.Data.Title)
+	}
+
+	// temp
+
+	targetUrl = apiServer.URL + "/podcasts/2/episodes/1"
+
+	req, err = http.NewRequest(http.MethodGet, targetUrl, nil)
+
+	if err != nil {
+		t.Errorf("Expected no error when creating request for /podcasts/2/episodes/1, got %s", err.Error())
+	}
+
+	res, err = apiServer.Client().Do(req)
+
+	if err != nil {
+		t.Errorf("Expected no error when mkaing request for /podcasts/2/episodes/1, got %s", err.Error())
+	}
+
+	if res.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected code %d for /podcasts/2/episodes/1 got %d", http.StatusNotFound, res.StatusCode)
+	}
+
 }

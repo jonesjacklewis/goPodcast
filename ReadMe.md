@@ -60,7 +60,8 @@ The core data engine is complete. The next phases will focus on building out the
     -   [x] Create RESTful API endpoints (`GET /podcasts`, `GET /podcasts/{id}/episodes`).
     -   [x] Create a `POST /podcasts` endpoint to add new podcasts.
 -   [ ] **Phase 3: Frontend Client**
-    -   [x] Develop a simple web client (initially vanilla, later React) to consume the API.
+    -   [x] Develop a simple vanilla web client to consume the API.
+    -   [ ] Redevelop web client using a front-end framework, likely React
 -   [ ] **Phase 4: Advanced Features**
     -   [ ] Implement user authentication.
     -   [ ] Create a background worker to periodically refresh all subscribed feeds.
